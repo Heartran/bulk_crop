@@ -7,7 +7,6 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 
 from template_manager import (
-    DEFAULT_TEMPLATE_NAME,
     TemplateError,
     export_template_to_file,
     import_template_from_file,
@@ -78,7 +77,7 @@ class CropUI:
         )
         self.canvas.pack()
 
-        self.template_var = tk.StringVar(value=DEFAULT_TEMPLATE_NAME)
+        self.template_var = tk.StringVar(value='')
 
         template_frame = tk.Frame(master)
         template_frame.pack(fill='x', pady=(10, 0))
@@ -196,8 +195,6 @@ class CropUI:
     def on_refresh_templates(self, apply_template: bool = False):
         current = self.template_var.get()
         templates = list_templates()
-        if DEFAULT_TEMPLATE_NAME not in templates:
-            templates.insert(0, DEFAULT_TEMPLATE_NAME)
         self.available_templates = templates
         self.template_combo['values'] = templates
         if current in templates:
@@ -206,7 +203,7 @@ class CropUI:
             self.template_var.set(templates[0])
         else:
             self.template_var.set('')
-        if apply_template:
+        if apply_template and self.template_var.get():
             self.apply_current_template()
 
     def apply_current_template(self):

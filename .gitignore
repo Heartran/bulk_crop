@@ -2,7 +2,8 @@
 !input/.gitkeep
 output/*
 !output/.gitkeep
-
+templates/
+!templates/.gitkeep
 # Cache / artefatti
 __pycache__/
 *.pyc
