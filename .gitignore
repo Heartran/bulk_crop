@@ -1,3 +1,8 @@
-input/
-output/
-*.gitkeep
+﻿input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+
+# Cache / artefatti
+__pycache__/
+*.pyc
