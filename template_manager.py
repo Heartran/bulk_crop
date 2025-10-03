@@ -37,7 +37,7 @@ def load_template(name: str = DEFAULT_TEMPLATE_NAME) -> Dict[str, int]:
         hint = f" Disponibili: {', '.join(available)}." if available else ""
         raise TemplateError(f"Template '{name}' non trovato in '{TEMPLATES_DIR}'.{hint}")
     try:
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, "r", encoding="utf-8-sig") as fh:
             data = json.load(fh)
     except OSError as exc:
         raise TemplateError(f"Impossibile leggere il template '{name}': {exc}") from exc
@@ -51,7 +51,7 @@ def import_template_from_file(source_path: str, overwrite: bool = False) -> str:
         raise TemplateError(f"File template non trovato: {source_path}")
 
     try:
-        with path.open("r", encoding="utf-8") as fh:
+        with path.open("r", encoding="utf-8-sig") as fh:
             data = json.load(fh)
     except OSError as exc:
         raise TemplateError(f"Impossibile leggere il file: {exc}") from exc
@@ -72,7 +72,7 @@ def import_template_from_file(source_path: str, overwrite: bool = False) -> str:
             dest_name = f"{base_name}_{suffix}"
 
     try:
-        with path.open("r", encoding="utf-8") as fh:
+        with path.open("r", encoding="utf-8-sig") as fh:
             content = fh.read()
         (dest_dir / f"{dest_name}.json").write_text(content, encoding="utf-8")
     except OSError as exc:
@@ -88,7 +88,7 @@ def export_template_to_file(name: str, destination_path: str, overwrite: bool = 
         raise TemplateError(f"Template '{name}' non trovato in '{TEMPLATES_DIR}'.")
 
     try:
-        content = src.read_text(encoding="utf-8")
+        content = src.read_text(encoding="utf-8-sig")
     except OSError as exc:
         raise TemplateError(f"Impossibile leggere il template '{name}': {exc}") from exc
 
