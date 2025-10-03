@@ -1,13 +1,16 @@
+import json
 import os
 from typing import List, Optional, Tuple
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 
 from template_manager import (
     DEFAULT_TEMPLATE_NAME,
     TemplateError,
+    export_template_to_file,
+    import_template_from_file,
     list_templates,
     load_template,
 )
@@ -94,6 +97,18 @@ class CropUI:
             command=self.on_refresh_templates,
         )
         refresh_btn.pack(side='left')
+        import_btn = tk.Button(
+            template_frame,
+            text='Importa...',
+            command=self.on_import_template,
+        )
+        import_btn.pack(side='left', padx=(5, 0))
+        export_btn = tk.Button(
+            template_frame,
+            text='Esporta...',
+            command=self.on_export_template,
+        )
+        export_btn.pack(side='left', padx=(5, 0))
 
         self.rect_id = None
         self.start_x = None
@@ -138,6 +153,46 @@ class CropUI:
         scale = width / resized.width
         return resized, scale
 
+    def on_export_template(self):
+        if self.crop_coords is None:
+            messagebox.showwarning('Template', "Seleziona o definisci un'area da esportare.")
+            return
+        default_name = self.current_template_label or self.template_var.get() or 'template'
+        default_filename = f"{default_name}.json" if default_name else 'template.json'
+        file_path = filedialog.asksaveasfilename(
+            title='Esporta template',
+            defaultextension='.json',
+            initialfile=default_filename,
+            filetypes=[('Template JSON', '*.json'), ('Tutti i file', '*.*')],
+        )
+        if not file_path:
+            return
+        try:
+            if self.manual_override or not self.current_template_name:
+                self._export_manual_selection(file_path, default_name)
+            else:
+                export_template_to_file(self.current_template_name, file_path, overwrite=True)
+        except TemplateError as exc:
+            messagebox.showerror('Template', f"Esportazione fallita: {exc}")
+            return
+        self.status_var.set(f"Template esportato in '{file_path}'.")
+
+    def on_import_template(self):
+        file_path = filedialog.askopenfilename(
+            title='Seleziona file template',
+            filetypes=[('Template JSON', '*.json'), ('Tutti i file', '*.*')],
+        )
+        if not file_path:
+            return
+        try:
+            imported_name = import_template_from_file(file_path)
+        except TemplateError as exc:
+            messagebox.showerror('Template', f"Importazione fallita: {exc}")
+            return
+        self.template_var.set(imported_name)
+        self.on_refresh_templates(apply_template=True)
+        self.status_var.set(f"Template '{imported_name}' importato e applicato.")
+
     def on_refresh_templates(self, apply_template: bool = False):
         current = self.template_var.get()
         templates = list_templates()
@@ -180,6 +235,26 @@ class CropUI:
 
     def on_template_selected(self, event=None):
         self.apply_current_template()
+
+    def _export_manual_selection(self, file_path: str, default_name: str):
+        if self.crop_coords is None:
+            raise TemplateError('Nessuna area da esportare.')
+        left, top, right, bottom = self.crop_coords
+        name = default_name or 'personalizzato'
+        data = {
+            'name': name,
+            'left': left,
+            'top': top,
+            'right': right,
+            'bottom': bottom,
+            'width': right - left,
+            'height': bottom - top,
+        }
+        try:
+            with open(file_path, 'w', encoding='utf-8') as fh:
+                json.dump(data, fh, ensure_ascii=False, indent=2)
+        except OSError as exc:
+            raise TemplateError(f"Impossibile salvare il file: {exc}") from exc
 
     def _set_crop_coords(
         self,
@@ -306,3 +381,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
